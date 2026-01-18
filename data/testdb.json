@@ -1,0 +1,6 @@
+{
+    "testDB": {
+        "url": "mongodb+srv://Admin_dev:ymr2005@cluster0.5dzbbql.mongodb.net/catalogue_website",
+        "sampling_size": 5
+    }
+}

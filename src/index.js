@@ -1,11 +1,12 @@
-import mcpServer from "./lib/server.js";
-import { z } from "zod";
-import connect from "./lib/transport.js";
 import add from "./tools/add.js";
-import registerTool from "./lib/registerTools.js"
+import getCollection from "./resource/getCollection.js";
+import { resisterResource, resisterTools, mcpServer, connect } from "./lib/index.js";
+
 
 const server = await mcpServer();
 
-await registerTool(server,[add])
+await resisterTools(server,[add])
+
+await resisterResource(server,[getCollection])
 
 connect(server)

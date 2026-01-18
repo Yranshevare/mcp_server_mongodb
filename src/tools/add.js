@@ -1,17 +1,15 @@
-import {z} from "zod"
-const add = {
-    name:"add",
-    description:"add two numbers",
-    inputSchema:{
-        a:z.number(),
-        b:z.number()
-    },
-    handler:async ({a,b})=>{
-        return {
-            sum:a+b
-        }
-    }
+import { z } from "zod";
+import Tool from "../util/tools.js";
 
+const inputSchema = {
+    a: z.number(),
+    b: z.number(),
+};
+
+async function handler({ a, b }) {
+    return { sum: a + b };
 }
 
-export default add
+const add = new Tool("add", "add two numbers", inputSchema, handler);
+
+export default add;
