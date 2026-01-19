@@ -1,60 +1,104 @@
-import { Collection, MongoClient } from "mongodb";
+import { MongoClient, ObjectId  } from "mongodb";
 import fs from "fs";
 
 const data = JSON.parse(fs.readFileSync("./data/testdb.json"));
-
-// const dbUrl = "mongodb+srv://yadnesh:ymr2005@bugtopro.1q7tzoh.mongodb.net/BugToPro";
-// const dbUrl = "mongodb+srv://Admin_dev:ymr2005@cluster0.5dzbbql.mongodb.net/catalogue_website";
 
 const client = new MongoClient(data.testDB.url);
 
 await client.connect();
 
 const db = client.db();
-const collections = await db.listCollections().toArray();
+const dbCollections = await db.listCollections().toArray();
+
+class Collections {
+    merged = {};
+    schema = {};
+
+    constructor(collection) {
+        if (!Array.isArray(collection)) throw new Error("collection must be an array");
+        this.collection = collection;
+        this.#processCollectionPipeline();
+    }
+
+    #combineCollection(collection) {
+        for (const key in collection) {
+            if (!this.merged[key]) {
+                this.merged[key] = [];
+            }
+            this.merged[key].push(collection[key]);
+        }
+    }
+
+    #getDataType(object, key) {
+        for (const item of object) {
+            const type = Array.isArray(item) ? "array" : item === null ? "null" : typeof item;
+
+            if (!this.schema[key]) this.schema[key] = {};
+
+            this.schema[key].type = this.schema[key]?.type || type;
+            if (type === "string") {
+                const data = new Set(object);
+
+                if (data.size / object.length < 0.5) {
+                    if (!this.schema[key]) this.schema[key] = {};
+                    this.schema[key].type = "enum";
+                    this.schema[key].enum = data;
+                    return;
+                }
+                const charCount = this.merged[key].reduce((acc, item) => acc + item.length, 0);
+                this.schema[key].avgCount = charCount / this.merged[key].length;
+                this.schema[key].example = [this.merged[key][0], this.merged[key][1], this.merged[key][2]];
+                return;
+            }
+        }
+    }
+    #HandleObjet(key){
+        // if(this.merged[key]) return
+        if(key === "createdAt" || key === "updatedAt") {
+            delete this.schema[key] 
+            return
+        }
+        // console.log(this.merged[key][0] )
+        if(this.merged[key][0] instanceof ObjectId){
+            this.schema[key].type = "mongodb_ObjectId"
+            return
+        }
+        this.schema[key].type = "object";
+        this.schema[key].properties = {}
+    }
+
+    #processCollectionPipeline() {
+        // combine the collection
+        this.collection.forEach((col) => {
+            this.#combineCollection(col);
+        });
+
+        // extract the datatype of the schema
+        for (const key in this.merged) {
+            this.#getDataType(this.merged[key], key);
+            if(this.schema[key].type === "object"){
+                this.#HandleObjet(key)
+            }
+        }
+    }
+}
 
 const collectionData = await Promise.all(
-    collections.map(async (Collection) => {
+    dbCollections.map(async (Collection) => {
         const entry = await db.collection(Collection.name).find().limit(data.testDB.sampling_size).toArray();
+        // const collection = new Collections(entry);
         return {
             name: Collection.name,
+            // schema: collection.schema,
             data: entry,
         };
     })
 );
 
-// function that return the schema of a document and the length of the string
-function inferSchemaFromDoc(doc) {
-    const schema = {};
-    for (const key in doc) {
-        const type = Array.isArray(doc[key]) ? "array" : doc[key] === null ? "null" : typeof doc[key];
-        schema[key] = { type, charCount: type === "string" && doc[key].length  };
-    }
-    return schema;
-}
+// collectionData.forEach((collection) => {
+//     console.log(collection);
+// });
 
-function mergeSchemas(docs) {
-    const combined = {};
-    docs.forEach((doc) => {
-        const schema = inferSchemaFromDoc(doc);
-
-        for (const key in schema) {
-            combined[key] = combined[key] || {};
-            combined[key].type = combined[key].type || schema[key].type;    // datatype
-            combined[key].charCount = combined[key].charCount ? (combined[key].charCount + schema[key].charCount) : schema[key].charCount;  // character count
-        }
-    });
-    // avg char count
-    for (const key in combined) {
-        if (combined[key].charCount) {
-            combined[key].charCount = combined[key].charCount / docs.length;
-            combined[key].example = docs.slice(0, 3).map((doc) => doc[key]);    // get some example
-        }
-    }
-    return combined;
-}
-
-const inferredSchema = mergeSchemas(collectionData[0].data);
-console.log(inferredSchema);
-
-// console.log(collectionData[0])
+const col = new Collections(collectionData[1].data);
+// console.log(col.merged);
+console.log(col.schema);
