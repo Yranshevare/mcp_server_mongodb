@@ -2,7 +2,7 @@ import { z } from "zod";
 
 const ResourceSchema = z.object({
     name: z.string(),
-    uri: z.any() || z.string(),
+    uri: z.any() ,
     metadata: z.any(),
     handler: z.function(),
 });
