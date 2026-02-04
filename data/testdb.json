@@ -1,6 +1,166 @@
 {
     "testDB": {
         "url": "mongodb+srv://Admin_dev:ymr2005@cluster0.5dzbbql.mongodb.net/catalogue_website",
-        "sampling_size": 5
+        "sampling_size": 5,
+        "schema": [
+            {
+                "name": "Notification",
+                "schema": {
+                    "_id": {
+                        "type": "mongodb_ObjectId"
+                    },
+                    "status": {
+                        "type": "enum",
+                        "enum": ["ACCEPTED", "PENDING"]
+                    },
+                    "fromName": {
+                        "type": "string",
+                        "avgCharCount": 8.571428571428571,
+                        "example": ["Yadnesh", "yadnesh", "Amit Gangawane"]
+                    },
+                    "fromPhone": {
+                        "type": "string",
+                        "avgCharCount": 9.571428571428571,
+                        "example": ["123456789", "9322095334", "7045447189"]
+                    },
+                    "fromAddress": {
+                        "type": "string",
+                        "avgCharCount": 14.428571428571429,
+                        "example": ["kalyan E", "first order for production server", "Skylon"]
+                    },
+                    "totalPrice": {
+                        "type": "string",
+                        "avgCharCount": 6.142857142857143,
+                        "example": ["476.00", "556", "199.00"]
+                    },
+                    "createdAt": {
+                        "type": "object",
+                        "items": {}
+                    },
+                    "updatedAt": {
+                        "type": "object",
+                        "items": {}
+                    },
+                    "products": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "items": {
+                                "productId": {
+                                    "type": "mongodb_ObjectId"
+                                },
+                                "quantity": {
+                                    "type": "number"
+                                },
+                                "price": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            {
+                "name": "Product",
+                "schema": {
+                    "_id": {
+                        "type": "mongodb_ObjectId"
+                    },
+                    "productName": {
+                        "type": "string",
+                        "avgCharCount": 19.8,
+                        "example": ["Industrial Steel Pipes 1", "Industrial Steel Pipes 2", "single door refrigerator"]
+                    },
+                    "images": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "primaryImage": {
+                        "type": "string",
+                        "avgCharCount": 85,
+                        "example": [
+                            "http://res.cloudinary.com/dknlbzgap/image/upload/v1754221124/odxajpqu8tz3uxqlh8ga.jpg",
+                            "http://res.cloudinary.com/dknlbzgap/image/upload/v1754212693/pmmefmtcmpmantxgev49.jpg",
+                            "http://res.cloudinary.com/dknlbzgap/image/upload/v1755343055/kbh40tt6vncjdenlktgv.jpg"
+                        ]
+                    },
+                    "category": {
+                        "type": "enum",
+                        "enum": ["test 5", "production"]
+                    },
+                    "description": {
+                        "type": "string",
+                        "avgCharCount": 29.8,
+                        "example": ["strong and robaust pipes ", "hard and rodust", "high quality fridge"]
+                    },
+                    "price": {
+                        "type": "string",
+                        "avgCharCount": 3.6,
+                        "example": ["199", "119", "100000"]
+                    },
+                    "material": {
+                        "type": "string",
+                        "avgCharCount": 12.8,
+                        "example": ["High-grade Steel ", "High-grade Steel chamhr", "High-grade Steel"]
+                    },
+                    "size": {
+                        "type": "string",
+                        "avgCharCount": 11,
+                        "example": ["5X10 cm ", "50cm x 10cm diameter", "5 X 2 feets"]
+                    },
+                    "weight": {
+                        "type": "string",
+                        "avgCharCount": 9.4,
+                        "example": ["1kg per piece ", "2.5 kg per piece", "2.5 kg "]
+                    },
+                    "discount": {
+                        "type": "string",
+                        "avgCharCount": 20.2,
+                        "example": ["by 10 to get 10% off ", "by 5 to get 10%", "win from lottry upto 25% discount"]
+                    },
+                    "otherSpecification": {
+                        "type": "string",
+                        "avgCharCount": 26.2,
+                        "example": ["by 10 pices for 10% off", "Galvanized finish, suitable for outdoor use", "low electricity consumption"]
+                    },
+                    "createdAt": {
+                        "type": "object",
+                        "items": {}
+                    },
+                    "updatedAt": {
+                        "type": "object",
+                        "items": {}
+                    }
+                }
+            },
+            {
+                "name": "Category",
+                "schema": {
+                    "_id": {
+                        "type": "mongodb_ObjectId"
+                    },
+                    "categoryName": {
+                        "type": "string",
+                        "avgCharCount": 7.2,
+                        "example": ["test 2 ", "test 5", "test 6"]
+                    },
+                    "description": {
+                        "type": "string",
+                        "avgCharCount": 16.4,
+                        "example": ["second testing changed", "fifth test", "sixth test"]
+                    },
+                    "createdAt": {
+                        "type": "object",
+                        "items": {}
+                    },
+                    "updatedAt": {
+                        "type": "object",
+                        "items": {}
+                    }
+                }
+            }
+        ]
     }
 }

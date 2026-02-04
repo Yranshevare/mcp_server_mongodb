@@ -7,7 +7,7 @@ const client = new MongoClient(data.testDB.url);
 await client.connect();
 
 const db = client.db();
-const dbCollections = await db.listCollections().toArray();
+// const dbCollections = await db.listCollections().toArray();
 
 class Collections {
     merged = {};
@@ -177,17 +177,66 @@ class Collections {
     }
 }
 
-// ---------- usage ----------
-const collectionData = await Promise.all(
-    dbCollections.map(async (Collection) => {
-        const entry = await db.collection(Collection.name).find().limit(data.testDB.sampling_size).toArray();
-        const col = new Collections(entry);
 
-        return {
-            name: Collection.name,
-            schema: col.schema,
-        };
-    })
-);
+// async function generateMongoDBQuery() {
+//   return db.collection("Notification").find().sort({ createdAt: -1 }).limit(1).toArray();
+// }
 
-console.log(JSON.stringify(collectionData, null, 2));
+// generateMongoDBQuery().then((result) => {
+//   console.log(result);
+// }).catch((error) => {
+//   console.error("Error generating MongoDB query:", error);
+// });
+
+
+
+
+// async function generateQuery() {
+//   return await db.collection("Category").aggregate([
+//     {
+//       $group: {
+//         _id: "$categoryName"
+//       }
+//     },
+//     {
+//       $project: {
+//         _id: 0,
+//         categoryName: "$_id"
+//       }
+//     }
+//   ]).toArray();
+// }
+
+// console.log(await generateQuery());
+
+
+// async function generateQuery() {
+//   return db.collection("Product").find({ category: "production" }).toArray();
+// }
+
+
+function generateQuery() {
+    return db.collection("Category").insertOne({
+        categoryName: "myCategory",
+        description: "Sample description"
+    });
+}
+
+console.log(await generateQuery());
+
+
+
+// // ---------- usage ----------
+// const collectionData = await Promise.all(
+//     dbCollections.map(async (Collection) => {
+//         const entry = await db.collection(Collection.name).find().limit(data.testDB.sampling_size).toArray();
+//         const col = new Collections(entry);
+
+//         return {
+//             name: Collection.name,
+//             schema: col.schema,
+//         };
+//     })
+// );
+
+// console.log(JSON.stringify(collectionData, null, 2));

@@ -55,10 +55,10 @@ class Collections {
         const sample = this.merged[key]?.[0];
         if (!sample) return;
 
-        if (key === "createdAt" || key === "updatedAt") {
-            delete this.schema[key];
-            return;
-        }
+        // if (key === "createdAt" || key === "updatedAt") {
+        //     delete this.schema[key];
+        //     return;
+        // }
 
         if (sample instanceof ObjectId) {
             return { type: "mongodb_ObjectId" };
