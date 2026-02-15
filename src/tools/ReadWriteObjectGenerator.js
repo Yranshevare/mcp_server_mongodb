@@ -17,9 +17,9 @@ async function handler({ inputSchema, Query }) {
     // console.log(message);
     const response = await llm.invoke(message);
 
-    return { content:[{type: "text", text: `Hello, from demo tool! ${response.content}`}] };
+    return { content:[{type: "text", text: `${response.content}`}] };
 }
 
-const Query = new Tool("userQuery", "perform CRUD operations on db", inputSchema, handler);
+const ReadWriteObjectGenerator = new Tool("ReadQuery", "perform Read operations on db", inputSchema, handler);
 
-export default Query;
+export default ReadWriteObjectGenerator;

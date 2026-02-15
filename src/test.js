@@ -214,12 +214,11 @@ class Collections {
 //   return db.collection("Product").find({ category: "production" }).toArray();
 // }
 
-
 function generateQuery() {
-    return db.collection("Category").insertOne({
-        categoryName: "myCategory",
-        description: "Sample description"
-    });
+  return db.collection("Notification").findOne(
+    {},
+    { sort: { createdAt: -1 } }
+  );
 }
 
 console.log(await generateQuery());
