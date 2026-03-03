@@ -13,35 +13,20 @@ async function handler({ inputSchema, Query }) {
     const message = [systemMessages.readPlanner, UpdatedUserMessage];
 
     // {
-    //   "collection": "<collection_name>",
-    //   "operation": "find" | "findOne" | "count" | "aggregate",
-    //   "filters": [
-    //     { "field": "<field>", "operator": "eq|ne|gt|gte|lt|lte|in", "value": <value> }
-    //   ],
-    //   "projection": ["field"],
-    //   "sort": { "<field>": "asc|desc" },
-    //   "limit": <number>
+    //     "collection": "<collection_name>",
+    //     "operation": "insertOne" | "insertMany",
+    //     "insert": [{ "<field>": <value> }]
     // }
 
     const successObj = z.object({
         collection: z.string(),
-        operation: z.enum(["find", "findOne", "count", "aggregate"]),
-        filters: z.array(
+        operation: z.enum(["insertOne", "insertMany"]),
+        insert: z.array(
             z.object({
                 field: z.string(),
-                operator: z.enum(["eq", "ne", "gt", "gte", "lt", "lte", "in"]),
                 value: z.union([z.string(), z.number(), z.array(z.union([z.string(), z.number()]))]),
             })
-        )
-            .optional(),
-        projection: z.array(z.string()).optional(),
-        sort: z.array(
-            z.object({
-                field: z.string(),
-                order: z.enum(["asc", "desc"]),
-            })
-        ).optional(),
-        limit: z.number().optional(),
+        ),
     });
 
     const failObj = z.object({
@@ -59,25 +44,50 @@ async function handler({ inputSchema, Query }) {
 const description =
     "takes user natural language query as an input, to generate the structured JSON query plan, which will later be used to query the database.";
 
-const ReadObjectGenerator = new Tool("ReadObjectGenerator", description, toolInputSchema, handler);
+const WriteObjectGenerator = new Tool("WriteObjectGenerator", description, toolInputSchema, handler);
 
-export default ReadObjectGenerator;
+export default WriteObjectGenerator;
 
 
 /*
-input: give me the list of product with category test 2
+input: i want to test my notification schema so add one dummy notification with some dummy data 
 
 output:
 {
-  "collection": "Product",
-  "operation": "find",
-  "filters": [
+  "collection": "Notification",
+  "operation": "insertOne",
+  "insert": [
     {
-      "field": "category",
-      "operator": "eq",
-      "value": "test 2"
+      "field": "status",
+      "value": "PENDING"
+    },
+    {
+      "field": "fromName",
+      "value": "Test User"
+    },
+    {
+      "field": "fromPhone",
+      "value": "1234567890"
+    },
+    {
+      "field": "fromAddress",
+      "value": "Test Address, Test City"
+    },
+    {
+      "field": "totalPrice",
+      "value": "250.00"
+    },
+    {
+      "field": "products",
+      "value": [
+        "productId",
+        "60c72b2f9b1e8e001c8e4d2b",
+        "quantity",
+        1,
+        "price",
+        "250.00"
+      ]
     }
-  ],
-  "limit": 20
+  ]
 }
 */

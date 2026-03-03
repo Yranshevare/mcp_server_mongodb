@@ -39,7 +39,6 @@ FILTERING:
 
 SORT / LIMIT:
 - Apply sort/limit only if explicitly requested
-
 `
 
 const generateQueryTemplate = new PromptTemplate({
@@ -361,14 +360,6 @@ If the intent is NOT clearly scoped and safe → REJECT
 const unifiedPlanner = `
 You are a secure MongoDB query planner and intent validator.
 
-Your job:
-1. Understand user intent
-2. Decide if the request is suspicious or not
-3. If SAFE and unsuspicious → generate a structured JSON query plan
-4. If NOT SAFE and suspicious → reject with an error
-
-You DO NOT generate MongoDB code.
-
 ---
 
 INPUTS:
@@ -376,6 +367,14 @@ INPUTS:
 2. User natural language query
 
 ---
+
+Your job:
+1. Understand user natural language Query and define his intent
+2. Decide if the request/intent is suspicious or not
+3. If SAFE and unsuspicious → generate a structured JSON query plan
+4. If NOT SAFE and suspicious → reject with an error
+
+You DO NOT generate MongoDB code.
 
 OUTPUT (STRICT JSON ONLY):
 
@@ -472,19 +471,21 @@ OUTPUT:
 const readPlanner = `
 You are a secure MongoDB READ query planner and intent validator.
 
-Your job:
-1. Understand user intent
-2. Decide if the request is suspicious or not
-3. If SAFE → generate a structured JSON query plan
-4. If NOT SAFE → reject with an error
-
-You DO NOT generate MongoDB code.
-
 ---
 
 INPUTS:
 1. Database schema
 2. User natural language query
+
+---
+
+Your job:
+1. Understand user natural language Query and define his intent
+2. Decide if the request/intent is suspicious or not
+3. If SAFE → generate a structured JSON query plan
+4. If NOT SAFE → reject with an error
+
+You DO NOT generate MongoDB code.
 
 ---
 
@@ -515,7 +516,6 @@ REJECT if:
 - Query is vague, unclear, ambiguous or suspicious
 - Scope is broad/unbounded (e.g., "all data", "everything")
 - Destructive intent (delete, update, truncate, drop)
-- Affects entire collection without constraint
 
 APPROVE if:
 - Clear and specific intent
@@ -530,6 +530,7 @@ GENERAL:
 - Use ONLY schema collections and fields
 - NEVER hallucinate
 - If mapping unclear → return error
+- consider the datatype of the field and check whether we can apply the operator or not
 
 READ:
 - Must include filters OR limit
@@ -568,19 +569,21 @@ OUTPUT:
 const writePlanner = `
 You are a secure MongoDB WRITE query planner and intent validator.
 
-Your job:
-1. Understand user intent
-2. Decide if the request is suspicious or not
-3. If SAFE → generate a structured JSON query plan
-4. If NOT SAFE → reject with an error
-
-You DO NOT generate MongoDB code.
-
 ---
 
 INPUTS:
 1. Database schema
 2. User natural language query
+
+---
+
+Your job:
+1. Understand user natural language Query and define his intent
+2. Decide if the request/intent is suspicious or not
+3. If SAFE → generate a structured JSON query plan
+4. If NOT SAFE → reject with an error
+
+You DO NOT generate MongoDB code.
 
 ---
 
@@ -590,7 +593,7 @@ IF SAFE:
 {
   "collection": "<collection_name>",
   "operation": "insertOne" | "insertMany",
-  "insert": { "<field>": <value> }
+  "insert": [{ "<field>": <value> }]
 }
 
 IF NOT SAFE:
@@ -621,6 +624,7 @@ GENERAL:
 - Use ONLY schema collections and fields
 - NEVER hallucinate
 - If mapping unclear → return error
+- respect the datatype from schema
 
 INSERT:
 - Use insertOne by default
