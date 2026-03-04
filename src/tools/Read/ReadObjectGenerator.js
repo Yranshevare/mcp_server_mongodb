@@ -1,7 +1,7 @@
 import { z } from "zod";
-import Tool from "../util/tools.js";
-import { humanMessage, systemMessages } from "../lib/message.js";
-import { structuredLlm } from "../lib/llm.js";
+import Tool from "../../util/tools.js";
+import { humanMessage, systemMessages } from "../../lib/message.js";
+import { structuredLlm } from "../../lib/llm.js";
 
 const toolInputSchema = {
     inputSchema: z.string(),
@@ -80,4 +80,33 @@ output:
   ],
   "limit": 20
 }
+*/
+
+/*
+input: give me the list of notification who has purchase request for product "Industrial Steel Pipes 1"
+
+output:
+{
+  "Error": "The query requests notifications for a product specified by name, but the Notification collection stores product IDs. This requires a lookup for the product ID, which cannot be represented in a single query operation with the current output schema."
+}
+
+*/
+
+/*
+input: give me the list of notification who has purchase request for product 60d0fe4f1c1f1f001c0c0c0d
+
+output:
+{
+  "collection": "Notification",
+  "operation": "find",
+  "filters": [
+    {
+      "field": "products.productId",
+      "operator": "eq",
+      "value": "60d0fe4f1c1f1f001c0c0c0d"
+    }
+  ],
+  "limit": 20
+}
+
 */

@@ -18,13 +18,22 @@ async function handler({ inputSchema, Query }) {
     //     "insert": [{ "<field>": <value> }]
     // }
 
+    const valueObj = z.union([
+        z.string(),
+        z.number(),
+        z.array(z.object({
+            field: z.string(),
+            value: z.union([z.string(), z.number(), z.array(z.any())])
+        }))
+    ])
+
     const successObj = z.object({
         collection: z.string(),
         operation: z.enum(["insertOne", "insertMany"]),
         insert: z.array(
             z.object({
                 field: z.string(),
-                value: z.union([z.string(), z.number(), z.array(z.union([z.string(), z.number()]))]),
+                value: valueObj,
             })
         ),
     });
@@ -50,7 +59,7 @@ export default WriteObjectGenerator;
 
 
 /*
-input: i want to test my notification schema so add one dummy notification with some dummy data 
+input: i want to test my notification schema so add one dummy notification with some dummy data with 2 dummy products purchase request
 
 output:
 {
@@ -63,29 +72,57 @@ output:
     },
     {
       "field": "fromName",
-      "value": "Test User"
+      "value": "Dummy Customer"
     },
     {
       "field": "fromPhone",
-      "value": "1234567890"
+      "value": "9988776655"
     },
     {
       "field": "fromAddress",
-      "value": "Test Address, Test City"
+      "value": "123 Dummy St, Test City"
     },
     {
       "field": "totalPrice",
-      "value": "250.00"
+      "value": "150.00"
     },
     {
       "field": "products",
       "value": [
-        "productId",
-        "60c72b2f9b1e8e001c8e4d2b",
-        "quantity",
-        1,
-        "price",
-        "250.00"
+        {
+          "field": "product1",
+          "value": [
+            {
+              "field": "productId",
+              "value": "60d0fe4f1c1f1f001c0c0c0d"
+            },
+            {
+              "field": "quantity",
+              "value": 1
+            },
+            {
+              "field": "price",
+              "value": "100.00"
+            }
+          ]
+        },
+        {
+          "field": "product2",
+          "value": [
+            {
+              "field": "productId",
+              "value": "60d0fe4f1c1f1f001c0c0c0e"
+            },
+            {
+              "field": "quantity",
+              "value": 2
+            },
+            {
+              "field": "price",
+              "value": "25.00"
+            }
+          ]
+        }
       ]
     }
   ]
