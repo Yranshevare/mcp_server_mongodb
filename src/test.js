@@ -1,5 +1,7 @@
 import { MongoClient } from "mongodb";
 import fs from "fs";
+// import ReadCompiler from "./Compiler/ReadCompiler.js"
+import WriteCompiler from "./Compiler/WriteCompiler.js"
 
 const data = JSON.parse(fs.readFileSync("./data/testdb.json"));
 const client = new MongoClient(data.testDB.url);
@@ -8,108 +10,141 @@ await client.connect();
 
 const db = client.db();
 
-const operatorMap = {
-    eq: "$eq",
-    ne: "$ne",
-    gt: "$gt",
-    gte: "$gte",
-    lt: "$lt",
-    lte: "$lte",
-    in: "$in",
-};
+function buildInsertDocument(insertArray) {
+    const document = {};
 
-function buildMongoFilter(filters) {
-    if (!filters || filters.length === 0) return {};
+    for (const item of insertArray) {
+        const { field, value } = item;
 
-    const query = {};
-
-    for (const filter of filters) {
-        const { field, operator, value } = filter;
-
-        if (operator === "eq") {
-            // Mongo allows direct equality
-            query[field] = value;
+        // If value is array → nested structure
+        if (Array.isArray(value)) {
+            // check if nested objects
+            if (value.length > 0 && value[0].field) {
+                document[field] = value.map(v => {
+                    if (Array.isArray(v.value)) {
+                        return {
+                            [v.field]: buildInsertDocument(v.value)
+                        };
+                    }
+                    return { [v.field]: v.value };
+                });
+            } else {
+                document[field] = value;
+            }
         } else {
-            query[field] = {
-                [operatorMap[operator]]: value,
-            };
+            document[field] = value;
         }
     }
 
-    return query;
+    return document;
 }
 
-function buildQueryString(structured) {
-    const {
-        collection,
-        operation,
-        filters,
-        projection,
-        sort,
-        limit,
-    } = structured;
+function buildInsertQueryString(structured) {
+    const { collection, operation, insert } = structured;
 
-    const mongoFilter = buildMongoFilter(filters);
+    const document = buildInsertDocument(insert);
 
     let queryString = `db.collection("${collection}")`;
 
     switch (operation) {
-        case "find":
-            queryString += `.find(${JSON.stringify(mongoFilter)})`;
+        case "insertOne":
+            queryString += `.insertOne(${JSON.stringify(document)})`;
             break;
 
-        case "findOne":
-            queryString += `.findOne(${JSON.stringify(mongoFilter)})`;
-            break;
-
-        case "count":
-            queryString += `.countDocuments(${JSON.stringify(mongoFilter)})`;
-            break;
-
-        case "aggregate":
-            queryString += `.aggregate(${JSON.stringify(mongoFilter)})`;
+        case "insertMany":
+            queryString += `.insertMany(${JSON.stringify(document)})`;
             break;
 
         default:
-            throw new Error("Unsupported operation");
-    }
-
-    if (projection) {
-        const projObj = Object.fromEntries(
-            projection.map((field) => [field, 1])
-        );
-        queryString += `.project(${JSON.stringify(projObj)})`;
-    }
-
-    if (sort) {
-        const sortObj = Object.fromEntries(
-            sort.map((s) => [s.field, s.order === "asc" ? 1 : -1])
-        );
-        queryString += `.sort(${JSON.stringify(sortObj)})`;
-    }
-
-    if (limit) {
-        queryString += `.limit(${limit})`;
+            throw new Error("Unsupported insert operation");
     }
 
     return queryString;
 }
 
-const structured = {
-    collection: "Product",
-    operation: "find",
-    filters: [
+
+const structuredInsert = JSON.parse(
+    `
+    {
+  "collection": "Notification",
+  "operation": "insertOne",
+  "insert": [
+    {
+      "field": "status",
+      "value": "PENDING"
+    },
+    {
+      "field": "fromName",
+      "value": "Dummy Customer"
+    },
+    {
+      "field": "fromPhone",
+      "value": "9988776655"
+    },
+    {
+      "field": "fromAddress",
+      "value": "123 Dummy St, Test City"
+    },
+    {
+      "field": "totalPrice",
+      "value": "150.00"
+    },
+    {
+      "field": "products",
+      "value": [
         {
-            field: "category",
-            operator: "eq",
-            value: "test 5",
+          "field": "product1",
+          "value": [
+            {
+              "field": "productId",
+              "value": "60d0fe4f1c1f1f001c0c0c0d"
+            },
+            {
+              "field": "quantity",
+              "value": 1
+            },
+            {
+              "field": "price",
+              "value": "100.00"
+            }
+          ]
         },
-    ],
-    limit: 20,
-};
+        {
+          "field": "product2",
+          "value": [
+            {
+              "field": "productId",
+              "value": "60d0fe4f1c1f1f001c0c0c0e"
+            },
+            {
+              "field": "quantity",
+              "value": 2
+            },
+            {
+              "field": "price",
+              "value": "25.00"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+    `
+);
 
-const queryString = buildQueryString(structured);
-console.log(queryString);
+// const insertQuery = buildInsertQueryString(structuredInsert);
 
-const result = await eval(queryString).toArray();
-console.log(result);
+// console.log(insertQuery);
+
+// const result = await eval(insertQuery);
+// console.log(result);
+
+// const saved = await db.collection("Notification").find({fromName:"Dummy Customer"}).toArray();
+// console.log(saved);
+
+// // delete the saved user 
+// await db.collection("Notification").deleteOne({fromName:"Dummy Customer"});
+
+const insertQuery = WriteCompiler.compile(structuredInsert);
+console.log(insertQuery);

@@ -2,6 +2,7 @@ import { z } from "zod";
 import Tool from "../util/tools.js";
 import { humanMessage, systemMessages } from "../lib/message.js";
 import { structuredLlm } from "../lib/llm.js";
+import WriteCompiler from "../Compiler/WriteCompiler.js";
 
 const toolInputSchema = {
     inputSchema: z.string(),
@@ -45,21 +46,38 @@ async function handler({ inputSchema, Query }) {
     const resObj = z.union([successObj, failObj]);
 
     const structuredLlmInstance = structuredLlm(resObj);
+
     const result = await structuredLlmInstance.invoke(message);
-    return { content: [{ type: "text", text: `${JSON.stringify(result)}` }] };
+
+    if(result.Error){
+        return { content: [{ type: "text", text: `${JSON.stringify(result)}` }] };
+    }
+
+    // validate the structured query syntax
+    const validationResult = WriteCompiler.schema().safeParse(result);
+
+    // syntax error
+    if (!validationResult.success) {
+        return { content: [{ type: "text", text: `syntax error or LLM generated query:\n${validationResult.error}\nstructured quey type: ${typeof result}` }] };
+    }
+
+    // compile the structured query
+    const queryString = WriteCompiler.compile(result);
+
+    return { content: [{ type: "text", text: `${queryString}` }] };
     // return result
 }
 
 const description =
-    "takes user natural language query as an input, to generate the structured JSON query plan, which will later be used to query the database.";
+    "takes user natural language query as an input, insert database query in string format.";
 
-const WriteObjectGenerator = new Tool("WriteObjectGenerator", description, toolInputSchema, handler);
+const InsertQueryGenerator = new Tool("InsertQueryGenerator", description, toolInputSchema, handler);
 
-export default WriteObjectGenerator;
+export default InsertQueryGenerator;
 
 
 /*
-input: i want to test my notification schema so add one dummy notification with some dummy data with 2 dummy products purchase request
+input: i want to test my notification schema so add one dummy notification with some dummy data with 2 dummy products purchase request
 
 output:
 {
